@@ -1,0 +1,120 @@
+pipeline {
+    agent any
+
+    environment {
+        SONAR_HOME = tool "sonar-scanner"
+    }
+
+    stages {
+        stage("Get Code from GitHub") {
+            steps {
+                git url: "https://github.com/devarinti02/2048.git"
+            }
+        }
+
+        stage("Sonar Analysis") {
+            steps {
+                withSonarQubeEnv("sonar-server") {
+                    sh '''
+                        $SONAR_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=2048_game \
+                        -Dsonar.projectKey=2048_game
+                    '''
+                }
+            }
+        }
+
+        stage("Sonar Quality Check") {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage("Dependency Check using OWASP DC") {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'dc'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+
+        stage("Vulnerability Check using Trivy") {
+            steps {
+                sh 'trivy fs . --format table -o trivy-fs-report.html'
+            }
+        }
+
+        stage("Build Docker Image") {
+            steps {
+                sh 'docker build -t d3varinti/2048-game:latest .'
+            }
+        }
+
+        stage("Push Docker Image to Docker Hub") {
+            steps {
+                withCredentials([string(credentialsId: 'docker_jenkins_token', variable: 'docker_jenkins_token')]) {
+                    sh '''
+                        echo "$docker_jenkins_token" | docker login -u "d3varinti" --password-stdin
+                        docker push d3varinti/2048-game:latest
+                    '''
+                }
+            }
+        }
+
+        stage("Terraform Init") {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage("Terraform Validate") {
+            steps {
+                dir('terraform') {
+                    sh 'terraform validate'
+                }
+            }
+        }
+
+        stage("Terraform Plan") {
+            steps {
+                dir('terraform') {
+                    script {
+                        def status = sh(script: 'terraform plan', returnStatus: true)
+                        if (status != 0) {
+                            error("Terraform plan failed with exit code ${status}")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("Terraform Apply") {
+            steps {
+                dir('terraform') {
+                    script {
+                        def status = sh(script: 'terraform apply -auto-approve', returnStatus: true)
+                        if (status != 0) {
+                            error("Terraform apply failed with exit code ${status}")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("Kubernetes Deployment") {
+            steps {
+                dir('kubernetes') {
+                    sh '''
+                        kubectl apply -f namespace.yaml
+                        kubectl apply -f deployment.yaml
+                        kubectl apply -f service.yaml
+                        kubectl apply -f ingress.yaml
+                    '''
+                }
+            }
+        }
+    }
+}
