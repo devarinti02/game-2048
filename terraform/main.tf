@@ -24,7 +24,7 @@ data "aws_subnets" "default" {
 
 resource "aws_eks_cluster" "game-2048" {
   name     = "game-2048"
-  role_arn = "arn:aws:iam::123456789012:role/eks-cluster-example"  # Replace with your actual IAM Role ARN
+  role_arn = "arn:aws:iam::672965104327:user/aws-ec2-eks" 
   version  = "1.31"
 
   vpc_config {
@@ -35,3 +35,4 @@ resource "aws_eks_cluster" "game-2048" {
     authentication_mode = "API"
   }
 }
+
