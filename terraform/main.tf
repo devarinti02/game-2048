@@ -36,9 +36,6 @@ resource "aws_eks_cluster" "game_2048" {
     authentication_mode = "API"
   }
 
-  depends_on = [aws_iam_role.eks_cluster_role]
-}
-
 # Node group role
 resource "aws_iam_role" "eks_nodegroup_role" {
   name = "eks-nodegroup-role"
@@ -89,3 +86,4 @@ resource "aws_eks_node_group" "game_2048_nodes" {
 
   depends_on = [aws_eks_cluster.game_2048]
 }
+
