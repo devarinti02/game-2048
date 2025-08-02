@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SONAR_HOME = tool "sonar-scanner"
-        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+        KUBECONFIG = '"${env.WORKSPACE}/kubeconfig"'
     }
 
     stages {
@@ -102,6 +102,14 @@ pipeline {
                         }
                     }
                 }
+            }
+        }
+
+        stage("Create EKS Cluster using eksctl") {
+            steps {
+                sh '''
+                    eksctl create cluster -f eks-cluster.yaml || echo "Cluster may already exist."
+                '''
             }
         }
 
