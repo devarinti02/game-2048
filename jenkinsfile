@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage("Get Code from GitHub") {
             steps {
-                git url: "https://github.com/devarinti02/game-2048.git"
+                git branch: 'main', url: 'https://github.com/devarinti02/game-2048.git'
             }
         }
 
@@ -127,4 +127,5 @@ pipeline {
         }
     }
 }
+
 
