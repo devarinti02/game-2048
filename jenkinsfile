@@ -117,14 +117,6 @@ pipeline {
             }
         }
 
-        stage("Create EKS Cluster using eksctl") {
-            steps {
-                sh '''
-                    eksctl create cluster -f eks-cluster.yaml || echo "Cluster may already exist."
-                '''
-            }
-        }
-
         stage("Configure kubectl") {
             steps {
                 sh 'aws eks update-kubeconfig --region ap-southeast-1 --name game-2048'
@@ -146,5 +138,6 @@ pipeline {
         }
     }
 }
+
 
 
