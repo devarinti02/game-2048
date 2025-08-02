@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage("Get Code from GitHub") {
             steps {
-                git url: "https://github.com/devarinti02/2048.git" # change accordingly
+                git url: "https://github.com/devarinti02/game-2048.git"
             }
         }
 
@@ -127,3 +127,4 @@ pipeline {
         }
     }
 }
+
