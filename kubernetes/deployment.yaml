@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: game-2048
-  namespace: game-2048-ns
+  #namespace: game-2048-ns
 spec:
   replicas: 2
   selector:
@@ -18,3 +18,4 @@ spec:
         image: d3varinti/2048-game:latest
         ports:
         - containerPort: 80
+
