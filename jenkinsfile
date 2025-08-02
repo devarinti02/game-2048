@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         SONAR_HOME = tool "sonar-scanner"
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
 
     stages {
@@ -65,14 +66,6 @@ pipeline {
         stage("Terraform Init") {
             steps {
                 dir('terraform') {
-                    sh 'terraform state rm aws_eks_cluster.game_2048'
-                }
-            }
-        }
-
-        stage("Terraform Init") {
-            steps {
-                dir('terraform') {
                     sh 'terraform init'
                 }
             }
@@ -111,21 +104,19 @@ pipeline {
                 }
             }
         }
-        stage("updating details of cluster"){
-            steps{
+
+        stage("Configure kubectl") {
+            steps {
                 sh 'aws eks update-kubeconfig --region ap-southeast-1 --name game-2048'
-            }
-        }
-        stage("updating current context to kubeconfig"){
-            steps{
                 sh 'kubectl config current-context'
             }
         }
+
         stage("Kubernetes Deployment") {
             steps {
                 dir('kubernetes') {
                     sh '''
-                        kubectl apply -f namespace.yaml
+                        kubectl apply -f namespace.yaml --validate=false
                         kubectl apply -f deployment.yaml
                         kubectl apply -f service.yaml
                         kubectl apply -f ingress.yaml
@@ -135,6 +126,3 @@ pipeline {
         }
     }
 }
-
-
-
