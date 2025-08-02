@@ -105,6 +105,18 @@ pipeline {
             }
         }
 
+        stage("updating details of cluster"){
+            steps{
+                sh 'aws eks update-kubeconfig --region ap-southeast-1 --name game-2048'
+            }
+        }
+
+        stage("updating current context to kubeconfig"){
+            steps{
+                sh 'kubectl config current-context'
+            }
+        }
+
         stage("Create EKS Cluster using eksctl") {
             steps {
                 sh '''
@@ -124,6 +136,7 @@ pipeline {
             steps {
                 dir('kubernetes') {
                     sh '''
+                        kubectl apply -f namespace.yaml
                         kubectl apply -f deployment.yaml
                         kubectl apply -f service.yaml
                         kubectl apply -f ingress.yaml
@@ -133,4 +146,5 @@ pipeline {
         }
     }
 }
+
 
