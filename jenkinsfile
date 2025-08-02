@@ -65,6 +65,14 @@ pipeline {
         stage("Terraform Init") {
             steps {
                 dir('terraform') {
+                    sh 'terraform state rm aws_eks_cluster.game_2048'
+                }
+            }
+        }
+
+        stage("Terraform Init") {
+            steps {
+                dir('terraform') {
                     sh 'terraform init'
                 }
             }
@@ -127,5 +135,6 @@ pipeline {
         }
     }
 }
+
 
 
