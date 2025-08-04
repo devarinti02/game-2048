@@ -55,8 +55,8 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 }
 
 # Create EKS cluster
-resource "aws_eks_cluster" "Game-2048" {
-  name     = "Game-2048"
+resource "aws_eks_cluster" "game-2048" {
+  name     = "game-2048"
   role_arn = aws_iam_role.eks_cluster.arn
   version  = "1.31"
 
@@ -72,4 +72,5 @@ resource "aws_eks_cluster" "Game-2048" {
     aws_iam_role_policy_attachment.eks_cluster_policy
   ]
 }
+
 
