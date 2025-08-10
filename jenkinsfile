@@ -3,13 +3,21 @@ pipeline {
 
     environment {
         SONAR_HOME = tool "sonar-scanner"
-        KUBECONFIG = '"${env.WORKSPACE}/kubeconfig"'
+        KUBECONFIG   = "${env.WORKSPACE}/kubeconfig"
+        AWS_REGION   = "ap-southeast-1"
+        CLUSTER_NAME = "demo-cluster"
     }
 
     stages {
+       stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage("Get Code from GitHub") {
             steps {
-                git branch: 'main', url: 'https://github.com/devarinti02/game-2048.git'
+                git branch: "main", url: "https://github.com/devarinti02/game-2048.git"
             }
         }
 
@@ -17,7 +25,7 @@ pipeline {
             steps {
                 withSonarQubeEnv("sonar-server") {
                     sh '''
-                        $SONAR_HOME/bin/sonar-scanner \
+                        $SONAR_HOME/bin/sonar-scanner \         
                         -Dsonar.projectName=2048_game \
                         -Dsonar.projectKey=2048_game
                     '''
@@ -63,51 +71,15 @@ pipeline {
             }
         }
 
-        stage("Terraform Init") {
-            steps {
-                dir('terraform') {
-                    sh 'terraform init'
-                }
-            }
-        }
-
-        stage("Terraform Validate") {
-            steps {
-                dir('terraform') {
-                    sh 'terraform validate'
-                }
-            }
-        }
-
-        stage("Terraform Plan") {
-            steps {
-                dir('terraform') {
-                    script {
-                        def status = sh(script: 'terraform plan', returnStatus: true)
-                        if (status != 0) {
-                            error("Terraform plan failed with exit code ${status}")
-                        }
-                    }
-                }
-            }
-        }
-
-        stage("Terraform Apply") {
-            steps {
-                dir('terraform') {
-                    script {
-                        def status = sh(script: 'terraform apply -auto-approve', returnStatus: true)
-                        if (status != 0) {
-                            error("Terraform apply failed with exit code ${status}")
-                        }
-                    }
-                }
+        stage(" creating cluster"){
+            steps{
+                sh 'eksctl create cluster --name ${CLUSTER_NAME} --region ${AWS_REGION}'
             }
         }
 
         stage("updating details of cluster"){
             steps{
-                sh 'aws eks update-kubeconfig --region ap-southeast-1 --name game-2048'
+                sh 'aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}'
             }
         }
 
@@ -116,14 +88,7 @@ pipeline {
                 sh 'kubectl config current-context'
             }
         }
-
-        stage("Configure kubectl") {
-            steps {
-                sh 'aws eks update-kubeconfig --region ap-southeast-1 --name game-2048'
-                sh 'kubectl config current-context'
-            }
-        }
-
+        
         stage("Kubernetes Deployment") {
             steps {
                 dir('kubernetes') {
@@ -131,13 +96,9 @@ pipeline {
                         kubectl apply -f namespace.yaml
                         kubectl apply -f deployment.yaml
                         kubectl apply -f service.yaml
-                        kubectl apply -f ingress.yaml
                     '''
                 }
             }
         }
     }
 }
-
-
-
