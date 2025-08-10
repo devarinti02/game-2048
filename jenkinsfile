@@ -5,7 +5,7 @@ pipeline {
         SONAR_HOME = tool "sonar-scanner"
         KUBECONFIG   = "${env.WORKSPACE}/kubeconfig"
         AWS_REGION   = "ap-southeast-1"
-        CLUSTER_NAME = "demo-cluster"
+        CLUSTER_NAME = "game-2048"
     }
 
     stages {
