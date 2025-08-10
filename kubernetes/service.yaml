@@ -6,11 +6,12 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-   app.kubernetes.io/name:: game-2048
+   app.kubernetes.io/name: game-2048
   ports:
     - port: 80
       targetPort: 80
       protocol: TCP
    
+
 
 
